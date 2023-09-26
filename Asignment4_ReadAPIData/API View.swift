@@ -8,13 +8,22 @@
 import SwiftUI
 
 //API Variables
-struct Rankings: Codable, Identifiable{
+struct Rankings: Codable, Identifiable {
     var id: Int { return UUID().hashValue }
-    var rank: Int
-    var school: String
-    var conference: String
-    var firstPlaceVotes: Int
-    var points: Int
+    var season: Int
+    var week: Int
+    struct Polls: Codable{
+        var poll:String?
+        struct Ranks: Codable{
+            var rank: Int
+            var school: String
+            var Conference: String
+            var firstPlaceVotes: Int
+            var points: Int
+        }
+        var ranks: [Ranks]
+    }
+    var polls: [Polls]
 }
 
 struct APIView: View {
@@ -33,10 +42,10 @@ struct APIView: View {
     //API Functions
     func getRanking() async -> (){
         do{
-            let url = URL(string: "https://api.collegefootballdata.com/rankings?year=<\(year)>&week=<\(week)>&seasonType=regular")!
-            let (data, _) = try await URLSession.shared.data(from: url)
-            print(data)
-            rankings = try JSONDecoder().decode([Rankings].self, from:data)
+            var urlRequest = URLRequest(url: URL(string: "https://api.collegefootballdata.com/rankings?year=\(year)&week=\(week)&seasonType=regular")!)
+                       urlRequest.setValue("Bearer  T8PKrQTcRbkCLful5ufGeOhXpyI3l/GJltspEsUwdTZxsNlY8DoCKDlaC0p2nE4T", forHTTPHeaderField: "Authorization")
+                       let (data, _) = try await URLSession.shared.data(for: urlRequest)
+            rankings = try JSONDecoder().decode([Rankings].self, from: data)
         } catch{
             print("Invalid Data")
         }
@@ -77,30 +86,32 @@ struct APIView: View {
                             )
                                     
                         }
-                        Button("Search"){
-                            
-                        }
+//                        Button("Search"){
+//
+//
+//                        }
                     }
                 
-                List(rankings){ ranking in
+                List(rankings){ rankings in
                     HStack(alignment: .top){
-                        //Image("SEC")
-
-                        Text("\(rankings.rank)")
+                        Image("SEC")
+                
+                        Text("\(rankings.ranks.rank)")
                             .font(.title)
                             .fontWeight(.medium)
-
+                
                         VStack(alignment: .leading){
-                            Text("\(rankings.school)")
+                            Text("\(rankings.ranks.school)")
                                 .font(.title)
                                 .fontWeight(.medium)
-
-                            Text("\(ranking.firstPlaceVotes)     \(rankings.points)")
+                
+                            Text("\(rankings.ranks.firstPlaceVotes)\(rankings.ranks.points)")
                                 .font(.footnote)
                                 .fontWeight(.medium)
                         }
                     }
-                    }
+                }
+
                 }
                 .task{
                     await getRanking()
