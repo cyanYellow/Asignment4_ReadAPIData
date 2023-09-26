@@ -12,18 +12,21 @@ struct Rankings: Codable, Identifiable {
     var id: Int { return UUID().hashValue }
     var season: Int
     var week: Int
-    struct Polls: Codable{
-        var poll:String?
-        struct Ranks: Codable{
-            var rank: Int
-            var school: String
-            var Conference: String
-            var firstPlaceVotes: Int
-            var points: Int
-        }
-        var ranks: [Ranks]
-    }
-    var polls: [Polls]
+    var polls:[Polls]
+}
+
+struct Polls: Codable {
+    var poll: String = "Coaches Poll"
+    var ranks: [Ranks]
+}
+
+struct Ranks: Codable {
+    var rank: Int
+    var school: String
+    var conference: String
+    var firstPlaceVotes: Int
+    var points: Int
+    
 }
 
 struct APIView: View {
@@ -43,7 +46,7 @@ struct APIView: View {
     func getRanking() async -> (){
         do{
             var urlRequest = URLRequest(url: URL(string: "https://api.collegefootballdata.com/rankings?year=\(year)&week=\(week)&seasonType=regular")!)
-                       urlRequest.setValue("Bearer  T8PKrQTcRbkCLful5ufGeOhXpyI3l/GJltspEsUwdTZxsNlY8DoCKDlaC0p2nE4T", forHTTPHeaderField: "Authorization")
+                       urlRequest.setValue("Bearer T8PKrQTcRbkCLful5ufGeOhXpyI3l/GJltspEsUwdTZxsNlY8DoCKDlaC0p2nE4T", forHTTPHeaderField: "Authorization")
                        let (data, _) = try await URLSession.shared.data(for: urlRequest)
             rankings = try JSONDecoder().decode([Rankings].self, from: data)
         } catch{
@@ -86,29 +89,26 @@ struct APIView: View {
                             )
                                     
                         }
-//                        Button("Search"){
-//
-//
-//                        }
                     }
                 
-                List(rankings){ rankings in
-                    HStack(alignment: .top){
-                        Image("SEC")
+                List(rankings){ ranking in
+                    VStack {
+                        //Image("SEC")
                 
-                        Text("\(rankings.ranks.rank)")
+                        Text(ranking.polls.ranks[rank])
                             .font(.title)
                             .fontWeight(.medium)
                 
-                        VStack(alignment: .leading){
-                            Text("\(rankings.ranks.school)")
-                                .font(.title)
-                                .fontWeight(.medium)
-                
-                            Text("\(rankings.ranks.firstPlaceVotes)\(rankings.ranks.points)")
-                                .font(.footnote)
-                                .fontWeight(.medium)
-                        }
+//                        VStack(alignment: .leading){
+//                            Text("\(ranking.polls.ranks.first?.school)")
+//                                .font(.title)
+//                                .fontWeight(.medium)
+//                
+//                            Text("\(ranking.polls.ranks.first?.firstPlaceVotes)")
+//                                .font(.footnote)
+//                                .fontWeight(.medium)
+//                        }
+                        Spacer()
                     }
                 }
 
