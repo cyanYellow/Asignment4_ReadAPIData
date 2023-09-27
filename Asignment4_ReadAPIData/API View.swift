@@ -8,19 +8,19 @@
 import SwiftUI
 
 //API Variables
-struct Rankings: Codable, Identifiable {
+struct Ranking: Codable, Identifiable {
     var id: Int { return UUID().hashValue }
     var season: Int
     var week: Int
-    var polls:[Polls]
+    var polls:[Poll]
 }
 
-struct Polls: Codable {
+struct Poll: Codable {
     var poll: String = "Coaches Poll"
-    var ranks: [Ranks]
+    var ranks: [Rank]
 }
 
-struct Ranks: Codable {
+struct Rank: Codable {
     var rank: Int
     var school: String
     var conference: String
@@ -30,9 +30,12 @@ struct Ranks: Codable {
 }
 
 struct APIView: View {
-    @State var rankings = [Rankings]()
     
+    @State var rankings = [Ranking]()
     
+    @State var allRanks = [Rank]()
+    
+        
     // Search Peramiters
     @State var year = 2023
     let step = 1
@@ -41,22 +44,17 @@ struct APIView: View {
     @State var week = 1
     let weekRange = 1...13
 
-    
     //API Functions
     func getRanking() async -> (){
         do{
             var urlRequest = URLRequest(url: URL(string: "https://api.collegefootballdata.com/rankings?year=\(year)&week=\(week)&seasonType=regular")!)
                        urlRequest.setValue("Bearer T8PKrQTcRbkCLful5ufGeOhXpyI3l/GJltspEsUwdTZxsNlY8DoCKDlaC0p2nE4T", forHTTPHeaderField: "Authorization")
                        let (data, _) = try await URLSession.shared.data(for: urlRequest)
-            rankings = try JSONDecoder().decode([Rankings].self, from: data)
-        } catch{
-            print("Invalid Data")
+            rankings = try JSONDecoder().decode([Ranking].self, from: data)
+        } catch( let error){
+            print("Invalid Data \(error)")
         }
-        
-        
     }
-
-    
     
     var body: some View {
         NavigationView{
@@ -89,13 +87,33 @@ struct APIView: View {
                             )
                                     
                         }
+                    Button(action: {
+                        Task{
+                            await getRanking()
+                        }
+                        
+                        }, label: {
+                            
+                            HStack{
+                                Spacer()
+                                Text("Search")
+                                Image(systemName: "magnifyingglass")
+                                Spacer()
+                            }
+                            
+                        })
                     }
+                
+                if let polls = rankings.first?.polls { //1
+                                let coachingPolls = polls.filter({ $0.poll == "Coaches Poll" }).first //2
+                                allRanks = coachingPolls?.ranks ?? [] //3
+                }
                 
                 List(rankings){ ranking in
                     VStack {
                         //Image("SEC")
                 
-                        Text(ranking.polls.ranks[rank])
+                        Text("team")
                             .font(.title)
                             .fontWeight(.medium)
                 
