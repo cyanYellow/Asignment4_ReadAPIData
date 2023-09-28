@@ -7,13 +7,22 @@
 
 import SwiftUI
 
+class ArrayModificationViewModel: ObservableObject {
+    
+    init() {
+        
+    }
+    func getTeam() {
+        
+    }
+}
 
 struct APISearch: View {
     
     //API Parameters
     @State var rankings = [Ranking]()
     @State var allRanks = [Rank]()
-    @State var searchedTeam = []
+    @State var searchedTeam: [Rank] = []
     
         
     // Search Paramets
@@ -30,7 +39,6 @@ struct APISearch: View {
         case apTop25, coachesPoll, fCSCoachesPoll, aFCADivisionIICoachesPoll
         var id: Self { self }
     }
-
 
     @State private var pollType: PollType = .apTop25
     
@@ -66,13 +74,13 @@ struct APISearch: View {
             print("Invalid Data \(error)")
         }
         if let polls = rankings.first?.polls { //1
-            let pollSection = polls.filter({ $0.poll == "\(pollSelect)" }).first //2
-            allRanks = pollSection?.ranks ?? [] //3
+            let pollSelection = polls.filter({ $0.poll == "\(pollSelect)" }).first //2
+            allRanks = pollSelection?.ranks ?? [] //3
         }
-        if let searchResult = allRanks.first { //1
+        if let searchResult = allRanks.first?.rank { //1
             let shownTeam = allRanks.filter({ $0.school == "\(teamName)" }).first //2
-            searchedTeam = [shownTeam] //3
         }
+        
     }
     
     var body: some View {
@@ -140,29 +148,29 @@ struct APISearch: View {
                             Section{
                             NavigationStack{
                                 
-                                List(searchedTeam){ searched in
-                                    VStack (alignment: .leading){
-                                        HStack(alignment: .top){
-                                            
-                                            Text("\(searchedTeam.rank).")
-                                                .font(.title)
-                                            
-                                            VStack(alignment: .leading){
-                                                
-                                                Text("\(searchedTeam.school)")
-                                                    .font(.title)
-                                                
-                                                HStack{
-                                                    Text("First Place Votes: \(searchedTeam.firstPlaceVotes) ")
-                                                        .font(.footnote)
-                                                    
-                                                    Text("Points: \(searchedTeam.points)")
-                                                        .font(.footnote)
-                                                }
-                                            }
-                                            }
-                                        }
-                                    }
+//                                List(searchedTeam){ searched in
+//                                    VStack (alignment: .leading){
+//                                        HStack(alignment: .top){
+//                                            
+//                                            Text("\(searchedTeam.rank).")
+//                                                .font(.title)
+//                                            
+//                                            VStack(alignment: .leading){
+//                                                
+//                                                Text("\(searchedTeam.school)")
+//                                                    .font(.title)
+//                                                
+//                                                HStack{
+//                                                    Text("First Place Votes: \(searchedTeam.firstPlaceVotes) ")
+//                                                        .font(.footnote)
+//                                                    
+//                                                    Text("Points: \(searchedTeam.points)")
+//                                                        .font(.footnote)
+//                                                }
+//                                            }
+//                                            }
+//                                        }
+//                                    }
                                 }
                             }
                             .navigationTitle("Team Search")
