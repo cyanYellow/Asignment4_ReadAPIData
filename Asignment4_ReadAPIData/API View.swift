@@ -20,7 +20,8 @@ struct Poll: Codable {
     var ranks: [Rank]
 }
 
-struct Rank: Codable {
+struct Rank: Codable, Identifiable {
+    var id: Int { return UUID().hashValue }
     var rank: Int
     var school: String
     var conference: String
@@ -31,18 +32,24 @@ struct Rank: Codable {
 
 struct APIView: View {
     
+    //API Parameters
     @State var rankings = [Ranking]()
-    
     @State var allRanks = [Rank]()
     
         
-    // Search Peramiters
+    // Search Paramets
     @State var year = 2023
     let step = 1
     let yearRange = 1950...2023
     
     @State var week = 1
     let weekRange = 1...13
+    
+    //Scroll View Lables
+    @Namespace var topID
+    @Namespace var SeachID
+    
+    @State var visibleItems: Set <Int> = Set()
 
     //API Functions
     func getRanking() async -> (){
@@ -51,98 +58,122 @@ struct APIView: View {
                        urlRequest.setValue("Bearer T8PKrQTcRbkCLful5ufGeOhXpyI3l/GJltspEsUwdTZxsNlY8DoCKDlaC0p2nE4T", forHTTPHeaderField: "Authorization")
                        let (data, _) = try await URLSession.shared.data(for: urlRequest)
             rankings = try JSONDecoder().decode([Ranking].self, from: data)
+            
+            
         } catch( let error){
             print("Invalid Data \(error)")
+        }
+        if let polls = rankings.first?.polls { //1
+            let coachingPolls = polls.filter({ $0.poll == "AP Top 25" }).first //2
+            allRanks = coachingPolls?.ranks ?? [] //3
         }
     }
     
     var body: some View {
         NavigationView{
             
-            VStack{
-                
-                Text("College Football Rankings")
-                    .multilineTextAlignment(.leading)
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .padding([.top, .leading, .trailing])
-                
-                Form{
-                        Section(header: Text("Year")){
-                            Stepper(
-                                String(year),
-                                value: $year,
-                                in: yearRange,
-                                step: step
-                            ) {_
-                                in
-                            }
-                        }
-                        Section(header: Text("Week")){
-                            Stepper(
-                                String(week),
-                                value: $week,
-                                in: weekRange,
-                                step: step
-                            )
-                                    
-                        }
-                    Button(action: {
-                        Task{
-                            await getRanking()
-                        }
+            ScrollViewReader{ proxy in
+                ZStack(alignment: .bottomTrailing){
+                    
+                    VStack{
                         
-                        }, label: {
+                        Form{
                             
-                            HStack{
-                                Spacer()
-                                Text("Search")
-                                Image(systemName: "magnifyingglass")
-                                Spacer()
+                            Section(header: Text("Year")){
+                                Stepper(
+                                    String(year),
+                                    value: $year,
+                                    in: yearRange,
+                                    step: step
+                                )
+                            }
+                            .id(topID)
+                            Section(header: Text("Week")){
+                                Stepper(
+                                    String(week),
+                                    value: $week,
+                                    in: weekRange,
+                                    step: step
+                                )
                             }
                             
-                        })
+                            Section{
+                                Button(action: {
+                                    Task{
+                                        await getRanking()
+                                    }
+                                    
+                                }, label: {
+                                    
+                                    HStack{
+                                        Spacer()
+                                        Text("Search")
+                                        Image(systemName: "magnifyingglass")
+                                        Spacer()
+                                    }
+                                    
+                                })
+                            }
+                            .id(SeachID)
+                            
+                            Spacer()
+                            
+                            
+                            List(allRanks){ allRank in
+                                VStack (alignment: .leading){
+                                    HStack(alignment: .top){
+                                        
+                                        Text("\(allRank.rank).")
+                                            .font(.title)
+                                        
+                                        VStack(alignment: .leading){
+                                            
+                                            Text("\(allRank.school)")
+                                                .font(.title)
+                                            
+                                            HStack{
+                                                Text("First Place Votes: \(allRank.firstPlaceVotes) ")
+                                                    .font(.footnote)
+                                                
+                                                Text("Points: \(allRank.points)")
+                                                    .font(.footnote)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-                
-                if let polls = rankings.first?.polls { //1
-                                let coachingPolls = polls.filter({ $0.poll == "Coaches Poll" }).first //2
-                                allRanks = coachingPolls?.ranks ?? [] //3
+                        
+                        //back to top button
+                        Button {
+                            proxy.scrollTo(topID)
+                            
+                        }label: {
+                                Image(systemName: "arrow.uturn.up")
+                            .padding(15)
+                            .background(.black.opacity(0.75) )
+                            .foregroundColor(.white)
+                            
+                        }
+                        .frame(alignment: .bottom)
+                        .cornerRadius(10.0)
+                        .padding(20)
+                    
                 }
-                
-                List(rankings){ ranking in
-                    VStack {
-                        //Image("SEC")
-                
-                        Text("team")
-                            .font(.title)
-                            .fontWeight(.medium)
-                
-//                        VStack(alignment: .leading){
-//                            Text("\(ranking.polls.ranks.first?.school)")
-//                                .font(.title)
-//                                .fontWeight(.medium)
-//                
-//                            Text("\(ranking.polls.ranks.first?.firstPlaceVotes)")
-//                                .font(.footnote)
-//                                .fontWeight(.medium)
-//                        }
-                        Spacer()
-                    }
-                }
+            }
 
                 }
                 .task{
                     await getRanking()
                 }
-              
-                Spacer()
                 
             }
             
         }
 
         
-    }
+
 
 
 #Preview {
