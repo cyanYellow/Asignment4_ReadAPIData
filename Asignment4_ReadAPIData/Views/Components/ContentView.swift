@@ -15,10 +15,7 @@ struct ContentView: View {
                     .tabItem {
                         Text("Rankings")
                     }
-                APISearch()
-                    .tabItem {
-                        Text("Search") 
-                    }
+
             }
         }
         .padding()

@@ -69,13 +69,14 @@ struct APISearch: View {
                        let (data, _) = try await URLSession.shared.data(for: urlRequest)
             rankings = try JSONDecoder().decode([Ranking].self, from: data)
             
+            if let polls = rankings.first?.polls { //1
+                let pollSelection = polls.filter({ $0.poll == "\(pollSelect)" }).first //2
+                allRanks = pollSelection?.ranks ?? [] //3
+            }
+            
             
         } catch( let error){
             print("Invalid Data \(error)")
-        }
-        if let polls = rankings.first?.polls { //1
-            let pollSelection = polls.filter({ $0.poll == "\(pollSelect)" }).first //2
-            allRanks = pollSelection?.ranks ?? [] //3
         }
         if let searchResult = allRanks.first?.rank { //1
             let shownTeam = allRanks.filter({ $0.school == "\(teamName)" }).first //2
